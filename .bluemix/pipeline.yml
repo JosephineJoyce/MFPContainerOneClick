@@ -1,0 +1,47 @@
+--- 
+stages: 
+  - 
+    name: Build Stage
+    inputs:
+      -
+        branch: master
+        type: git
+    triggers:
+      -
+        type: commit
+    jobs:
+      -
+        type: builder
+        name: Build
+        extension_id: 1079f55ce434b4f6c87e72c79a184e01
+        target:
+          url: ${CF_TARGET_URL}
+          organization_guid: ${CF_ORGANIZATION_ID}
+          space_guid: ${CF_SPACE_ID}
+        IMAGE_NAME: testimage
+        USE_CACHED_LAYERS: true
+        COMMAND: "./initDockerBuild.sh"
+  -
+    name: Deploy Stage
+    inputs:
+      -
+        type: job
+        stage: Build Stage
+        job: Build
+    triggers:
+      -
+        type: stage
+    jobs:
+      -
+        type: deployer
+        name: Deploy
+        extension_id: 1079f55ce434b4f6c87e72c79a0fb94d
+        target:
+          url: ${CF_TARGET_URL}
+          organization_guid: ${CF_ORGANIZATION_ID}
+          space_guid: ${CF_SPACE_ID}
+        PORT: 80
+        OPTIONAL_ARGS:
+        CONTAINER_NAME: pushContainerTest
+        DEPLOY_TYPE: red_black
+        COMMAND: "./initDockerDeploy.sh"
